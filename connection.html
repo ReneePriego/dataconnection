@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Will It Break the Connection?</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: white; min-height: 100vh; padding: 20px; transition: background 0.4s ease; }
+    .container { width: 100%; max-width: 900px; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
+    .landing-page { background: white; border-radius: 20px; padding: 40px 40px 60px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.1); animation: slideIn 0.6s ease-out; border: none; width: 100%; }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .cro-header { font-size: 24px; color: #00A1E0; font-weight: 600; margin-bottom: 10px; letter-spacing: 1px; }
+    .logo { width: 160px; height: auto; display: block; margin: 0 auto 16px; }
+    .landing-hero { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+    .hero-content { flex: 1 1 320px; text-align: center; }
+    .cta-row { display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap; }
+    .game-title { font-size: 48px; color: #00A1E0; font-weight: 800; margin-bottom: 30px; letter-spacing: 2px; }
+    .game-description { font-size: 16px; color: black; line-height: 1.8; margin-bottom: 40px; max-width: 620px; margin-left: auto; margin-right: auto; }
+    .start-btn { background: #00A1E0; color: white; border: none; padding: 18px 60px; font-size: 20px; font-weight: 700; border-radius: 50px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 5px 15px rgba(0,161,224,0.2); letter-spacing: 1px; }
+    .start-btn:hover { transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0,161,224,0.5); }
+    .start-btn:active { transform: translateY(-1px); }
+    .game-page { display: none; background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideIn 0.6s ease-out; max-width: 900px; margin: 0 auto; width: 100%; }
+    .game-page.active { display: block; }
+    .game-header { text-align: center; margin-bottom: 24px; }
+    .game-header h1 { font-size: 36px; color: #00A1E0; margin-bottom: 6px; }
+    .subtitle { font-size: 15px; color: #004B87; margin-bottom: 12px; }
+    .stats { display: flex; justify-content: center; gap: 30px; margin-top: 10px; font-size: 16px; color: #666; flex-wrap: wrap; }
+    .quiz-card { background: #f8f9fa; padding: 22px; border-radius: 15px; border: 2px solid #e0e0e0; display: grid; gap: 14px; }
+    .badge { display: inline-block; background: #e8f4fb; color: #004B87; padding: 6px 12px; border-radius: 10px; font-weight: 700; border: 1px solid #00A1E0; width: fit-content; }
+    .question { font-size: 22px; font-weight: 700; color: #00A1E0; }
+    .prompt { font-size: 18px; color: #000; line-height: 1.5; }
+    .choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+    .choice-btn { padding: 14px; border-radius: 12px; border: 2px solid #ddd; background: white; font-size: 18px; font-weight: 700; color: #004B87; cursor: pointer; transition: all 0.2s ease; }
+    .choice-btn:hover { border-color: #00A1E0; box-shadow: 0 8px 18px rgba(0,161,224,0.2); transform: translateY(-2px); }
+    .choice-btn.correct { border-color: #28a745; background: #ecf9f0; color: #1e7e34; }
+    .choice-btn.incorrect { border-color: #ff6b6b; background: #ffecec; color: #a40000; }
+    .message { font-size: 16px; font-weight: 700; color: #00A1ED; min-height: 22px; text-align: center; margin-top: 4px; }
+    .message.positive { color: #00A1ED; }
+    .message.negative { color: #00A1ED; }
+    .game-controls { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; margin-top: 8px; }
+    .btn-link { padding: 12px 20px; border-radius: 12px; border: 2px solid #00A1E0; background: #e8f4fb; color: #004B87; font-weight: 700; text-decoration: none; cursor: pointer; transition: all 0.2s ease; min-width: 150px; text-align: center; }
+    .btn-link:hover { background: #00A1E0; color: #ffffff; box-shadow: 0 8px 18px rgba(0,0,0,0.08); transform: translateY(-1px); }
+    .btn-home { background: #00A1E0; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 5px 15px rgba(0,161,224,0.2); transition: all 0.2s ease; }
+    .btn-home:hover { background: #0088B3; transform: translateY(-2px); }
+    .next-btn { background: #004B87; color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: 700; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.18); transition: all 0.2s ease; }
+    .next-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+    .next-btn:hover:enabled { transform: translateY(-2px); }
+    .win-screen { display: none; background: white; border-radius: 20px; padding: 40px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: slideIn 0.6s ease-out; max-width: 900px; width: 100%; margin: 0 auto; text-align: center; }
+    .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 10; }
+    .modal.active { display: flex; }
+    .modal-content { background: #ffffff; padding: 24px; border-radius: 14px; max-width: 360px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.2); text-align: center; }
+    .modal-content h3 { margin-bottom: 12px; color: #004B87; }
+    .modal-content input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; margin-bottom: 12px; font-size: 16px; }
+    .modal-actions { display: flex; gap: 10px; justify-content: center; }
+    @media (max-width: 768px) { .game-title { font-size: 36px; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="landing-page" id="landingPage">
+      <img class="logo" src="logo.png" alt="Logo">
+      <div class="landing-hero">
+        <div class="hero-content">
+          <div class="cro-header">Connection Check</div>
+          <h1 class="game-title">Will It Break?</h1>
+          <p class="game-description">A quick, fun way to test if Google Sheets changes will 💥 break or 👍 not break your Tableau connection, reinforcing this month’s Data Connection Best Practices!</p>
+          <div class="cta-row">
+            <button class="start-btn" onclick="openNamePrompt()">Start Game</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="game-page" id="gamePage">
+      <div class="game-header">
+        <h1>Will It Break the Connection?</h1>
+        <div class="subtitle">Choose whether each change breaks or doesn't break your Tableau connection.</div>
+        <div class="stats">
+          <span>Time: <strong id="timer">00:00</strong></span>
+          <span>Score: <strong id="score">0 / 8</strong></span>
+        </div>
+      </div>
+
+      <div class="quiz-card">
+        <span class="badge" id="badge">Card 1 of 8</span>
+        <div class="question" id="questionTitle">Q1</div>
+        <div class="prompt" id="questionPrompt">You add a pivot table to a different tab in the Google Sheet.</div>
+        <div class="choices">
+          <button class="choice-btn" data-choice="break">💥 Breaks</button>
+          <button class="choice-btn" data-choice="safe">👍 Doesn’t break</button>
+        </div>
+        <div class="message" id="message">Choose your answer.</div>
+        <div class="game-controls">
+          <button class="next-btn" id="nextBtn" disabled>Next card</button>
+          <button class="btn-home" onclick="goHome()">Back to Home</button>
+        </div>
+        <div class="admin-controls" style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-top:6px;">
+          <a id="csvLink" class="btn-link" download="connection-winners.csv" style="display:none;">Export winners CSV</a>
+          <button id="resetWinnersBtn" class="btn-link" style="display:none;" onclick="resetWinners()">Reset winners</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="win-screen" id="winScreen">
+      <h1 style="color:#00A1E0; margin-bottom:12px;">Great run!</h1>
+      <p style="margin-bottom:12px; color:#004B87;">You finished the connection check.</p>
+      <p id="winDetails" style="margin-bottom:12px; color:#004B87;"></p>
+      <img src="champ.png" alt="Champion badge" style="width:260px; height:auto; margin:16px auto; display:block;">
+      <div class="game-controls" style="justify-content:center; margin-top:16px;">
+        <button class="game-btn btn-home" onclick="goHome()">Back to Home</button>
+      </div>
+    </div>
+
+    <div class="modal" id="nameModal">
+      <div class="modal-content">
+        <h3>Enter your name</h3>
+        <input type="text" id="playerNameInput" placeholder="Your name" />
+        <div class="modal-actions">
+          <button class="start-btn" style="padding:10px 20px; border-radius:10px;" onclick="confirmName()">Start</button>
+          <button class="game-btn btn-home" style="padding:10px 20px; border-radius:10px;" onclick="closeNamePrompt()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ADMIN_USER = 'reneepriego';
+    const QUESTIONS = [
+      {
+        title: 'Q1',
+        prompt: 'You add a pivot table to a different tab in the Google Sheet.',
+        answer: 'break',
+        reason: 'Pivot sheets often shift ranges and can disrupt how Tableau reads the source.'
+      },
+      {
+        title: 'Q2',
+        prompt: 'You rename the tab that Tableau is connected to.',
+        answer: 'break',
+        reason: 'Tab name is part of the connection path; changing it breaks the link.'
+      },
+      {
+        title: 'Q3',
+        prompt: 'You rename a column (e.g., “Date” → “Order Date”).',
+        answer: 'break',
+        reason: 'Field references change, so Tableau cannot match the renamed column.'
+      },
+      {
+        title: 'Q4',
+        prompt: 'You insert a blank row at the top of the sheet.',
+        answer: 'safe',
+        reason: 'Tableau still finds the header row and data beneath it.'
+      },
+      {
+        title: 'Q5',
+        prompt: 'You add a new column to the far right called “Comments.”',
+        answer: 'safe',
+        reason: 'Adding unused columns on the right keeps existing field references intact.'
+      },
+      {
+        title: 'Q6',
+        prompt: 'You delete a column that Tableau was previously using.',
+        answer: 'break',
+        reason: 'Removing referenced fields breaks any worksheet that depends on them.'
+      },
+      {
+        title: 'Q7',
+        prompt: 'You reorder columns (move column 1 to the end).',
+        answer: 'safe',
+        reason: 'Tableau matches by field name, not position, so order changes are okay.'
+      },
+      {
+        title: 'Q8',
+        prompt: 'You add a new blank tab to the Google Sheet.',
+        answer: 'safe',
+        reason: 'New tabs do not affect the connected tab unless Tableau points to them.'
+      }
+    ];
+
+    let currentIndex = 0;
+    let score = 0;
+    let playerName = '';
+    let winners = [];
+    let playedNames = new Set();
+    let startTime = 0;
+    let timerInterval = null;
+    let finishedTime = null;
+    let answered = false;
+
+    const questionTitle = document.getElementById('questionTitle');
+    const questionPrompt = document.getElementById('questionPrompt');
+    const badge = document.getElementById('badge');
+    const messageEl = document.getElementById('message');
+    const nextBtn = document.getElementById('nextBtn');
+    const scoreEl = document.getElementById('score');
+    const choiceButtons = Array.from(document.querySelectorAll('.choice-btn'));
+
+    function renderCard() {
+      const q = QUESTIONS[currentIndex];
+      questionTitle.textContent = q.title;
+      questionPrompt.textContent = q.prompt;
+      badge.textContent = `Card ${currentIndex + 1} of ${QUESTIONS.length}`;
+      messageEl.textContent = 'Choose your answer.';
+      messageEl.classList.remove('positive', 'negative');
+      answered = false;
+      nextBtn.disabled = true;
+      choiceButtons.forEach(btn => {
+        btn.classList.remove('correct', 'incorrect');
+        btn.disabled = false;
+      });
+    }
+
+    function handleChoice(choice) {
+      if (answered) return;
+      const q = QUESTIONS[currentIndex];
+      const isCorrect = choice === q.answer;
+      answered = true;
+      if (isCorrect) {
+        score += 1;
+        messageEl.textContent = `👍 Correct — ${q.reason}`;
+        messageEl.classList.add('positive');
+      } else {
+        messageEl.textContent = `💥 Not quite — ${q.reason}`;
+        messageEl.classList.add('negative');
+      }
+      scoreEl.textContent = `${score} / ${QUESTIONS.length}`;
+      choiceButtons.forEach(btn => {
+        const btnChoice = btn.getAttribute('data-choice');
+        btn.classList.add(btnChoice === q.answer ? 'correct' : 'incorrect');
+        btn.disabled = true;
+      });
+      nextBtn.disabled = false;
+      if (currentIndex === QUESTIONS.length - 1) nextBtn.textContent = 'See results';
+    }
+
+    function handleNext() {
+      if (!answered) return;
+      if (currentIndex === QUESTIONS.length - 1) {
+        showWinScreen();
+        return;
+      }
+      currentIndex += 1;
+      nextBtn.textContent = 'Next card';
+      renderCard();
+    }
+
+    function showWinScreen() {
+      stopTimer();
+      document.getElementById('gamePage').classList.remove('active');
+      const percent = Math.round((score / QUESTIONS.length) * 100);
+      const summary = playerName ? `${playerName}, you scored ${score}/${QUESTIONS.length} (${percent}%) in ${formatTimeElapsed()}.` : `You scored ${score}/${QUESTIONS.length} (${percent}%) in ${formatTimeElapsed()}.`;
+      document.getElementById('winDetails').textContent = summary;
+      document.getElementById('winScreen').style.display = 'block';
+      recordWinner();
+    }
+
+    function startGame() {
+      currentIndex = 0;
+      score = 0;
+      answered = false;
+      scoreEl.textContent = `0 / ${QUESTIONS.length}`;
+      nextBtn.textContent = 'Next card';
+      document.getElementById('landingPage').style.display = 'none';
+      document.getElementById('winScreen').style.display = 'none';
+      document.getElementById('gamePage').classList.add('active');
+      renderCard();
+      startTimer();
+    }
+
+    function goHome() {
+      stopTimer();
+      document.getElementById('gamePage').classList.remove('active');
+      document.getElementById('landingPage').style.display = 'block';
+      document.getElementById('winScreen').style.display = 'none';
+      messageEl.textContent = '';
+    }
+
+    function openNamePrompt() {
+      document.getElementById('nameModal').classList.add('active');
+      document.getElementById('playerNameInput').value = playerName || '';
+      setTimeout(() => document.getElementById('playerNameInput').focus(), 0);
+    }
+
+    function closeNamePrompt() {
+      document.getElementById('nameModal').classList.remove('active');
+    }
+
+    function confirmName() {
+      const nameVal = document.getElementById('playerNameInput').value.trim();
+      if (!nameVal) return;
+      const normalized = nameVal.toLowerCase();
+      const isAdmin = normalized === ADMIN_USER.toLowerCase();
+      playerName = nameVal;
+      if (!isAdmin && !playedNames.has(normalized)) {
+        playedNames.add(normalized);
+        savePlayedNames();
+      }
+      closeNamePrompt();
+      startGame();
+      updateAdminVisibility();
+    }
+
+    function recordWinner() {
+      if (!playerName) return;
+      const normalized = playerName.toLowerCase();
+      const alreadyRecorded = winners.some(w => (w.name || '').toLowerCase() === normalized);
+      if (alreadyRecorded) return;
+      const timestamp = new Date().toISOString();
+      winners.push({ name: playerName, score, time: formatTimeElapsed(), timestamp });
+      saveWinners();
+      updateCsvLink();
+    }
+
+    function saveWinners() {
+      localStorage.setItem('connectionWinners', JSON.stringify(winners));
+    }
+
+    function loadWinners() {
+      const data = localStorage.getItem('connectionWinners');
+      if (data) {
+        try { winners = JSON.parse(data); } catch (e) { winners = []; }
+      }
+    }
+
+    function savePlayedNames() {
+      localStorage.setItem('connectionPlayed', JSON.stringify(Array.from(playedNames)));
+    }
+
+    function loadPlayedNames() {
+      const data = localStorage.getItem('connectionPlayed');
+      if (data) {
+        try { playedNames = new Set(JSON.parse(data)); } catch (e) { playedNames = new Set(); }
+      }
+    }
+
+    function updateAdminVisibility() {
+      const link = document.getElementById('csvLink');
+      const resetBtn = document.getElementById('resetWinnersBtn');
+      const isAdmin = (playerName && playerName.toLowerCase() === ADMIN_USER.toLowerCase());
+      if (link) link.style.display = isAdmin ? 'inline-block' : 'none';
+      if (resetBtn) resetBtn.style.display = isAdmin ? 'inline-block' : 'none';
+    }
+
+    function updateCsvLink() {
+      const link = document.getElementById('csvLink');
+      if (!link) return;
+      const header = 'Name,Score,Time,Timestamp\n';
+      const rows = winners.map(w => `${w.name},${w.score}/${QUESTIONS.length},${w.time},${w.timestamp}`).join('\n');
+      const csv = header + rows;
+      link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+    }
+
+    function resetWinners() {
+      winners = [];
+      saveWinners();
+      updateCsvLink();
+      playedNames = new Set();
+      savePlayedNames();
+      alert('Winners and play history reset.');
+    }
+
+    function initStorage() {
+      loadWinners();
+      loadPlayedNames();
+      updateCsvLink();
+    }
+
+    function startTimer() {
+      stopTimer();
+      startTime = Date.now();
+      finishedTime = null;
+      timerInterval = setInterval(updateTimer, 1000);
+      updateTimer();
+    }
+
+    function stopTimer() {
+      clearInterval(timerInterval);
+      timerInterval = null;
+    }
+
+    function resetTimer() {
+      startTime = 0;
+      finishedTime = null;
+      document.getElementById('timer').textContent = '00:00';
+    }
+
+    function updateTimer() {
+      document.getElementById('timer').textContent = formatTimeElapsed();
+    }
+
+    function getElapsedSeconds() {
+      if (!startTime) return 0;
+      const endPoint = finishedTime || Date.now();
+      return Math.floor((endPoint - startTime) / 1000);
+    }
+
+    function formatTimeElapsed() {
+      const elapsed = getElapsedSeconds();
+      const minutes = String(Math.floor(elapsed / 60)).padStart(2, '0');
+      const seconds = String(elapsed % 60).padStart(2, '0');
+      return `${minutes}:${seconds}`;
+    }
+
+    choiceButtons.forEach(btn => {
+      btn.addEventListener('click', () => handleChoice(btn.getAttribute('data-choice')));
+    });
+    nextBtn.addEventListener('click', handleNext);
+
+    initStorage();
+  </script>
+</body>
+</html>
