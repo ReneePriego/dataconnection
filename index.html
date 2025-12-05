@@ -78,12 +78,12 @@
         <div class="subtitle">Choose whether each change breaks or doesn't break your Tableau connection.</div>
         <div class="stats">
           <span>Time: <strong id="timer">00:00</strong></span>
-          <span>Score: <strong id="score">0 / 5</strong></span>
+          <span>Score: <strong id="score">0 / 6</strong></span>
         </div>
       </div>
 
       <div class="quiz-card">
-        <span class="badge" id="badge">Card 1 of 5</span>
+        <span class="badge" id="badge">Card 1 of 6</span>
         <div class="question" id="questionTitle"></div>
         <div class="prompt" id="questionPrompt">You rename the tab in Google Sheets that Tableau is connected to.</div>
         <div class="choices">
@@ -156,6 +156,12 @@
         prompt: 'You add extra rows of data below your existing table in the same Google Sheet tab.',
         answer: 'safe',
         reason: 'Tableau automatically reads new rows as long as headers stay the same.'
+      },
+      {
+        title: '',
+        prompt: 'You add an extra row above the real headers.',
+        answer: 'break',
+        reason: 'Tableau misreads the header, Data Interpreter can fix it.'
       }
     ];
 
@@ -213,7 +219,9 @@
       scoreEl.textContent = `${score} / ${questions.length}`;
       choiceButtons.forEach(btn => {
         const btnChoice = btn.getAttribute('data-choice');
-        btn.classList.add(btnChoice === q.answer ? 'correct' : 'incorrect');
+        if (btnChoice === choice) {
+          btn.classList.add(isCorrect ? 'correct' : 'incorrect');
+        }
         btn.disabled = true;
       });
       nextBtn.disabled = false;
