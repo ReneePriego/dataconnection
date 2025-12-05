@@ -78,14 +78,14 @@
         <div class="subtitle">Choose whether each change breaks or doesn't break your Tableau connection.</div>
         <div class="stats">
           <span>Time: <strong id="timer">00:00</strong></span>
-          <span>Score: <strong id="score">0 / 8</strong></span>
+          <span>Score: <strong id="score">0 / 5</strong></span>
         </div>
       </div>
 
       <div class="quiz-card">
-        <span class="badge" id="badge">Card 1 of 8</span>
-        <div class="question" id="questionTitle">Q1</div>
-        <div class="prompt" id="questionPrompt">You add a pivot table to a different tab in the Google Sheet.</div>
+        <span class="badge" id="badge">Card 1 of 5</span>
+        <div class="question" id="questionTitle"></div>
+        <div class="prompt" id="questionPrompt">You rename the tab in Google Sheets that Tableau is connected to.</div>
         <div class="choices">
           <button class="choice-btn" data-choice="break">💥 Breaks</button>
           <button class="choice-btn" data-choice="safe">👍 Doesn’t break</button>
@@ -126,54 +126,36 @@
 
   <script>
     const ADMIN_USER = 'reneepriego';
-    const QUESTIONS = [
+    const BASE_QUESTIONS = [
       {
-        title: 'Q1',
-        prompt: 'You add a pivot table to a different tab in the Google Sheet.',
+        title: '',
+        prompt: 'You rename the tab in Google Sheets that Tableau is connected to.',
         answer: 'break',
-        reason: 'Pivot sheets often shift ranges and can disrupt how Tableau reads the source.'
+        reason: 'Tableau cannot find the tab after a name change.'
       },
       {
-        title: 'Q2',
-        prompt: 'You rename the tab that Tableau is connected to.',
+        title: '',
+        prompt: 'You add a pivot table anywhere in the Google Sheets file (even on a different tab).',
         answer: 'break',
-        reason: 'Tab name is part of the connection path; changing it breaks the link.'
+        reason: 'Pivot tables always break the Tableau connection.'
       },
       {
-        title: 'Q3',
-        prompt: 'You rename a column (e.g., “Date” → “Order Date”).',
+        title: '',
+        prompt: 'You rename a column Tableau is already using (e.g., “Amount” → “Total Amount”).',
         answer: 'break',
-        reason: 'Field references change, so Tableau cannot match the renamed column.'
+        reason: 'Breaks field references until replaced.'
       },
       {
-        title: 'Q4',
-        prompt: 'You insert a blank row at the top of the sheet.',
+        title: '',
+        prompt: 'You add a brand-new column to the Google Sheet without renaming any existing columns.',
         answer: 'safe',
-        reason: 'Tableau still finds the header row and data beneath it.'
+        reason: 'Tableau ignores new columns until you use them.'
       },
       {
-        title: 'Q5',
-        prompt: 'You add a new column to the far right called “Comments.”',
+        title: '',
+        prompt: 'You add extra rows of data below your existing table in the same Google Sheet tab.',
         answer: 'safe',
-        reason: 'Adding unused columns on the right keeps existing field references intact.'
-      },
-      {
-        title: 'Q6',
-        prompt: 'You delete a column that Tableau was previously using.',
-        answer: 'break',
-        reason: 'Removing referenced fields breaks any worksheet that depends on them.'
-      },
-      {
-        title: 'Q7',
-        prompt: 'You reorder columns (move column 1 to the end).',
-        answer: 'safe',
-        reason: 'Tableau matches by field name, not position, so order changes are okay.'
-      },
-      {
-        title: 'Q8',
-        prompt: 'You add a new blank tab to the Google Sheet.',
-        answer: 'safe',
-        reason: 'New tabs do not affect the connected tab unless Tableau points to them.'
+        reason: 'Tableau automatically reads new rows as long as headers stay the same.'
       }
     ];
 
@@ -186,6 +168,11 @@
     let timerInterval = null;
     let finishedTime = null;
     let answered = false;
+    let questions = [...BASE_QUESTIONS];
+
+    function shuffleList(arr) {
+      return [...arr].sort(() => Math.random() - 0.5);
+    }
 
     const questionTitle = document.getElementById('questionTitle');
     const questionPrompt = document.getElementById('questionPrompt');
@@ -196,10 +183,10 @@
     const choiceButtons = Array.from(document.querySelectorAll('.choice-btn'));
 
     function renderCard() {
-      const q = QUESTIONS[currentIndex];
+      const q = questions[currentIndex];
       questionTitle.textContent = q.title;
       questionPrompt.textContent = q.prompt;
-      badge.textContent = `Card ${currentIndex + 1} of ${QUESTIONS.length}`;
+      badge.textContent = `Card ${currentIndex + 1} of ${questions.length}`;
       messageEl.textContent = 'Choose your answer.';
       messageEl.classList.remove('positive', 'negative');
       answered = false;
@@ -212,7 +199,7 @@
 
     function handleChoice(choice) {
       if (answered) return;
-      const q = QUESTIONS[currentIndex];
+      const q = questions[currentIndex];
       const isCorrect = choice === q.answer;
       answered = true;
       if (isCorrect) {
@@ -223,19 +210,19 @@
         messageEl.textContent = `💥 Not quite — ${q.reason}`;
         messageEl.classList.add('negative');
       }
-      scoreEl.textContent = `${score} / ${QUESTIONS.length}`;
+      scoreEl.textContent = `${score} / ${questions.length}`;
       choiceButtons.forEach(btn => {
         const btnChoice = btn.getAttribute('data-choice');
         btn.classList.add(btnChoice === q.answer ? 'correct' : 'incorrect');
         btn.disabled = true;
       });
       nextBtn.disabled = false;
-      if (currentIndex === QUESTIONS.length - 1) nextBtn.textContent = 'See results';
+      if (currentIndex === questions.length - 1) nextBtn.textContent = 'See results';
     }
 
     function handleNext() {
       if (!answered) return;
-      if (currentIndex === QUESTIONS.length - 1) {
+      if (currentIndex === questions.length - 1) {
         showWinScreen();
         return;
       }
@@ -247,18 +234,19 @@
     function showWinScreen() {
       stopTimer();
       document.getElementById('gamePage').classList.remove('active');
-      const percent = Math.round((score / QUESTIONS.length) * 100);
-      const summary = playerName ? `${playerName}, you scored ${score}/${QUESTIONS.length} (${percent}%) in ${formatTimeElapsed()}.` : `You scored ${score}/${QUESTIONS.length} (${percent}%) in ${formatTimeElapsed()}.`;
+      const percent = Math.round((score / questions.length) * 100);
+      const summary = playerName ? `${playerName}, you scored ${score}/${questions.length} (${percent}%) in ${formatTimeElapsed()}.` : `You scored ${score}/${questions.length} (${percent}%) in ${formatTimeElapsed()}.`;
       document.getElementById('winDetails').textContent = summary;
       document.getElementById('winScreen').style.display = 'block';
       recordWinner();
     }
 
     function startGame() {
+      questions = shuffleList(BASE_QUESTIONS);
       currentIndex = 0;
       score = 0;
       answered = false;
-      scoreEl.textContent = `0 / ${QUESTIONS.length}`;
+      scoreEl.textContent = `0 / ${questions.length}`;
       nextBtn.textContent = 'Next card';
       document.getElementById('landingPage').style.display = 'none';
       document.getElementById('winScreen').style.display = 'none';
@@ -345,7 +333,7 @@
       const link = document.getElementById('csvLink');
       if (!link) return;
       const header = 'Name,Score,Time,Timestamp\n';
-      const rows = winners.map(w => `${w.name},${w.score}/${QUESTIONS.length},${w.time},${w.timestamp}`).join('\n');
+      const rows = winners.map(w => `${w.name},${w.score}/${questions.length},${w.time},${w.timestamp}`).join('\n');
       const csv = header + rows;
       link.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
     }
