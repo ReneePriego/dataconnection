@@ -126,6 +126,7 @@
 
   <script>
     const ADMIN_USER = 'reneepriego';
+    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyGNir_plJg6qQ1KG0ChIxhAbBmiHjBpLubiJXAgT4l8a88Ql9P3_H28SS24Bo-XEkuIA/exec';
     const BASE_QUESTIONS = [
       {
         title: '',
@@ -170,6 +171,7 @@
     let playerName = '';
     let winners = [];
     let playedNames = new Set();
+    let postedNames = new Set();
     let startTime = 0;
     let timerInterval = null;
     let finishedTime = null;
@@ -247,6 +249,7 @@
       document.getElementById('winDetails').textContent = summary;
       document.getElementById('winScreen').style.display = 'block';
       recordWinner();
+      sendResultToSheet();
     }
 
     function startGame() {
@@ -305,6 +308,30 @@
       winners.push({ name: playerName, score, time: formatTimeElapsed(), timestamp });
       saveWinners();
       updateCsvLink();
+    }
+
+    async function sendResultToSheet() {
+      if (!playerName || !GOOGLE_SCRIPT_URL) return;
+      const normalized = playerName.toLowerCase();
+      if (postedNames.has(normalized)) return;
+      postedNames.add(normalized);
+      const payload = {
+        name: playerName,
+        score: `${score}/${questions.length}`,
+        time: formatTimeElapsed(),
+        timestamp: new Date().toISOString(),
+        version: 'connection-quiz-v1'
+      };
+      try {
+        await fetch(GOOGLE_SCRIPT_URL, {
+          method: 'POST',
+          mode: 'cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (err) {
+        console.warn('Could not send result to sheet', err);
+      }
     }
 
     function saveWinners() {
