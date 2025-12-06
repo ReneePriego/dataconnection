@@ -126,7 +126,7 @@
 
   <script>
     const ADMIN_USER = 'reneepriego';
-    const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxPiuhswgmB7u8HqI6kZzZZnS4SfWT1CloDu9nvzatXFQxBC_KQ3aiCtJVGTrWtParR3w/exec';
+    const WEBHOOK_URL = 'https://webhook.site/dd10a13c-2320-425f-b223-30ae0c1c973c';
     const BASE_QUESTIONS = [
       {
         title: '',
@@ -249,7 +249,7 @@
       document.getElementById('winDetails').textContent = summary;
       document.getElementById('winScreen').style.display = 'block';
       recordWinner();
-      sendResultToSheet();
+      sendResultToWebhook();
     }
 
     function startGame() {
@@ -310,10 +310,10 @@
       updateCsvLink();
     }
 
-    async function sendResultToSheet() {
-      if (!playerName || !GOOGLE_SCRIPT_URL) return;
+    async function sendResultToWebhook() {
+      if (!playerName || !WEBHOOK_URL) return;
       const normalized = playerName.toLowerCase();
-      if (postedNames.has(normalized)) return; // only first attempt per device/name
+      if (postedNames.has(normalized)) return; // solo primer intento por nombre/dispositivo
       postedNames.add(normalized);
       const payload = {
         name: playerName,
@@ -323,14 +323,14 @@
         version: 'connection-quiz-v1'
       };
       try {
-        await fetch(GOOGLE_SCRIPT_URL, {
+        await fetch(WEBHOOK_URL, {
           method: 'POST',
           mode: 'cors',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
       } catch (err) {
-        console.warn('Could not send result to sheet', err);
+        console.warn('Could not send result to webhook', err);
       }
     }
 
