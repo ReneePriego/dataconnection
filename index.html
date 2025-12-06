@@ -98,6 +98,7 @@
         <div class="admin-controls" style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-top:6px;">
           <a id="csvLink" class="btn-link" download="connection-winners.csv" style="display:none;">Export winners CSV</a>
           <button id="resetWinnersBtn" class="btn-link" style="display:none;" onclick="resetWinners()">Reset winners</button>
+          <a id="sheetLink" class="btn-link" style="display:none;" target="_blank" rel="noopener noreferrer">Open results sheet</a>
         </div>
       </div>
     </div>
@@ -126,7 +127,8 @@
 
   <script>
     const ADMIN_USER = 'reneepriego';
-    const WEBHOOK_URL = 'https://webhook.site/dd10a13c-2320-425f-b223-30ae0c1c973c';
+    const WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbyjTL6jqEORhYfA50jbDvWM_VSlkCVr6E-B0rt4LkIu-SnletRNXUhY-IP_AQ1Yc5zpAA/exec';
+    const SHEET_URL = 'https://docs.google.com/spreadsheets/d/1GL-2Cd9U5MIzeUF9x5soz6I9ZKkMesuyFLpzrXdMl1Y/edit';
     const BASE_QUESTIONS = [
       {
         title: '',
@@ -319,13 +321,13 @@
         name: playerName,
         score: `${score}/${questions.length}`,
         time: formatTimeElapsed(),
-        timestamp: new Date().toISOString(),
+        timestamp: new Date().toISOString().split('T')[0], // solo fecha (YYYY-MM-DD)
         version: 'connection-quiz-v1'
       };
       try {
         await fetch(WEBHOOK_URL, {
           method: 'POST',
-          mode: 'cors',
+          mode: 'no-cors', // Apps Script Web Apps suelen responder mejor sin CORS expuestos
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
@@ -359,9 +361,14 @@
     function updateAdminVisibility() {
       const link = document.getElementById('csvLink');
       const resetBtn = document.getElementById('resetWinnersBtn');
+      const sheetBtn = document.getElementById('sheetLink');
       const isAdmin = (playerName && playerName.toLowerCase() === ADMIN_USER.toLowerCase());
-      if (link) link.style.display = isAdmin ? 'inline-block' : 'none';
-      if (resetBtn) resetBtn.style.display = isAdmin ? 'inline-block' : 'none';
+      if (link) link.style.display = 'none';
+      if (resetBtn) resetBtn.style.display = 'none';
+      if (sheetBtn) {
+        sheetBtn.style.display = isAdmin ? 'inline-block' : 'none';
+        sheetBtn.href = SHEET_URL;
+      }
     }
 
     function updateCsvLink() {
